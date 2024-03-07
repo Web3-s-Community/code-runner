@@ -1,0 +1,37 @@
+# Build stage
+FROM golang:1.22-alpine3.19 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o main main.go
+
+# Run stage
+FROM python:3-alpine
+RUN apk add --no-cache --update \
+    # python3 \
+    # py3-pip \
+    bash \
+    docker \
+    openrc \
+    nodejs \
+    npm \
+    docker-compose \
+    curl \
+    && rm -rf ~/.cache/* /usr/local/share/man /tmp/*
+
+RUN rc-update add docker boot
+
+# Install pipx
+RUN pip install pipx
+# Ensure pipx binaries are available on PATH
+RUN pipx ensurepath
+# pipx install pipenv
+RUN pipx install algokit
+# install npm
+RUN apk add --no-cache nodejs npm
+
+WORKDIR /app
+COPY --from=builder /app/main .
+COPY app.env .
+
+EXPOSE 21558
+CMD [ "/app/main", "/bin/bash" ]

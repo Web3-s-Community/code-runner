@@ -1,0 +1,46 @@
+version: "3.9"
+services:
+  algo:
+    build:
+      context: .
+      dockerfile: Dockerfile.algo
+    container_name: algo-service
+    expose:
+      - "21551"
+    # ports:
+    #   - "21551:21551"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_public"
+      - "traefik.http.routers.algo_service.rule=Host(`compiler.web3school.test`)"
+      - "traefik.http.services.algo_service.loadbalancer.server.port=21551"
+    networks:
+      - traefik_public
+      - algokit_sandbox_default
+    environment:
+      - ENV=prod
+      - FOLDER_ALGO_PATH=/algo
+    volumes:
+      - ./algo:/algo
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command: ["/app/main"]
+  
+  go-main:
+    build:
+      context: .
+      # Correct the path to your Dockerfile
+      dockerfile: Dockerfile
+    container_name: go-main
+    ports:
+      - 8080:3000 # Forward the exposed port 3000 to port 8080 on the host machine
+    # Important to bind/mount your codebase dir to /app dir for live reload
+    volumes:
+      - ./:/app
+
+networks:
+  traefik_public:
+    external: true
+  algokit_sandbox_default:
+    external: true
