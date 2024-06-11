@@ -22,7 +22,8 @@ server-air-debug: # https://github.com/cosmtrek/air?tab=readme-ov-file#debug
 tidy:
 	go mod tidy
 
-get_packages:
-	go get -u github.com/gin-gonic/gin
+build:
+	go mod tidy
+	go build main.go
 
 .PHONY: db_docs db_schema sqlc test server

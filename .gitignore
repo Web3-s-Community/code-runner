@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+
+tmp
+algorand-coding-challenges
+web3school.log
+reset-service.sh

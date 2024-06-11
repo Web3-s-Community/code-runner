@@ -1,0 +1,1 @@
+../algo-contracts/jest.config.js

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"code-runner/util"
 	"context"
 	"net/http"
 	"os"
@@ -9,48 +8,64 @@ import (
 	"syscall"
 	"time"
 
+	"code-runner/util"
+
+	ginalgorand "code-runner/module/algorand/transport/gin"
+
 	"github.com/gin-gonic/gin"
-
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
 	"github.com/yassinebenaid/godump"
 )
 
 func main() {
-	// you could insert your favorite logger here for structured or leveled logging
 
 	// load config file app.env
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot load config")
 	}
-	godump.Dump(config)
 	switch config.Environment {
 	case "development":
-		// https://github.com/rs/zerolog?tab=readme-ov-file#pretty-logging
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		godump.Dump(config)
 	case "production":
 		gin.SetMode(gin.ReleaseMode)
+
 	}
+
+	log.Logger = log.Output(util.LoggerOutput(config))
 
 	// log.Println("Starting server...")
 	log.Info().Msg("Starting server...")
 
 	router := gin.Default()
 
-	router.GET("/api/account", func(c *gin.Context) {
+	// router.Use(util.CORSMiddleware())
+	router.Use(util.CORSConfig())
+
+	router.GET("/", func(c *gin.Context) {
+		c.String(200, "Hello Server Compiler!!")
+	})
+
+	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"hello": "world",
+			"message": "pong",
 		})
 	})
+	codeV1 := router.Group("/code/v1")
+	{
+		codeV1.POST("/algo-playground", ginalgorand.ExecuteCodePlaygroundHandler)
+	}
+
+	if config.CertFilePath != "" && config.KeyFilePath != "" {
+		router.RunTLS(config.ServiceAddress, config.CertFilePath, config.KeyFilePath)
+	}
 
 	srv := &http.Server{
 		Addr:    config.ServiceAddress,
 		Handler: router,
 	}
 
-	// Graceful server shutdown - https://github.com/gin-gonic/examples/blob/master/graceful-shutdown/graceful-shutdown/server.go
+	// Graceful server shutdown - https://github.com/gin-gonic/examples/blob/master/graceful-shutdown/close/server.go
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			// log.Fatalf("Failed to initialize server: %v\n", err)
@@ -59,7 +74,7 @@ func main() {
 	}()
 
 	// log.Printf("Listening on port %v\n", srv.Addr)
-	log.Info().Msgf("Listening on port %v\n", srv.Addr)
+	log.Info().Msgf("Listening on port %v", srv.Addr)
 
 	// Wait for kill signal of channel
 	quit := make(chan os.Signal)

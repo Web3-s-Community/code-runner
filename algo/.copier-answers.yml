@@ -1,0 +1,9 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 1.0.0
+_src_path: gh:algorandfoundation/algokit-fullstack-template
+author_email: server@web3school.fun
+author_name: Server Web3School
+contract_name: hello_world
+preset_name: starter
+project_name: algo
+

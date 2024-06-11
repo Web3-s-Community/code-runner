@@ -1,0 +1,8 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 0.10.1
+_src_path: gh:algorandfoundation/algokit-react-frontend-template
+author_email: server@web3school.fun
+author_name: Server Web3School
+preset_name: starter
+project_name: algo-app
+

@@ -1,0 +1,33 @@
+{
+  "name": "Runner",
+  "desc": "",
+  "methods": [
+    {
+      "name": "doMath",
+      "args": [
+        {
+          "name": "a",
+          "type": "uint64"
+        },
+        {
+          "name": "b",
+          "type": "uint64"
+        },
+        {
+          "name": "operation",
+          "type": "string"
+        }
+      ],
+      "returns": {
+        "type": "uint64"
+      }
+    },
+    {
+      "name": "createApplication",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ]
+}

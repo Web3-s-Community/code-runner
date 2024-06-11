@@ -1,8 +1,12 @@
 package util
 
 import (
+	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 
@@ -23,6 +27,9 @@ type Config struct {
 	EmailSenderAddress   string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
 	EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
 	FolderAlgoPath       string        `mapstructure:"FOLDER_ALGO_PATH"`
+	CertFilePath         string        `mapstructure:"CERT_FILE_PATH"`
+	KeyFilePath          string        `mapstructure:"KEY_FILE_PATH"`
+	NPMPath              string        `mapstructure:"NPM_PATH"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -40,4 +47,59 @@ func LoadConfig(path string) (config Config, err error) {
 
 	err = viper.Unmarshal(&config)
 	return
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Header("Access-Control-Allow-Methods", "POST,HEAD,PATCH, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func LoggerOutput(config Config) zerolog.LevelWriter {
+	fAll, _ := os.OpenFile(
+		"web3school.log",
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		0664,
+	)
+	// https: //github.com/rs/zerolog/issues/150
+	rootLogger := zerolog.New(fAll).With().Str("some_key", "some_val").Timestamp().Logger()
+	// consoleLogger := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "15:04:05"}
+	consoleLogger := zerolog.ConsoleWriter{Out: os.Stderr}
+	// consoleLogger := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
+
+	// https://zerolog.io/#multiple-log-output/
+	multi := zerolog.MultiLevelWriter(os.Stdout, rootLogger)
+	switch config.Environment {
+	case "development":
+		// https://github.com/rs/zerolog?tab=readme-ov-file#pretty-logging
+		multi = zerolog.MultiLevelWriter(rootLogger, consoleLogger)
+	}
+
+	return multi
+}
+
+func CORSConfig() gin.HandlerFunc {
+	return cors.New(cors.Config{
+		// AllowOrigins:     []string{"https://foo.com"},
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"POST", "GET", "PUT", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		// AllowOriginFunc: func(origin string) bool {
+		// 	return origin == "https://github.com"
+		// },
+		MaxAge: 12 * time.Hour,
+	})
 }

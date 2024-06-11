@@ -1,0 +1,20 @@
+{
+  "name": "WritingFirstContract",
+  "desc": "",
+  "methods": [
+    {
+      "name": "getProposal",
+      "args": [],
+      "returns": {
+        "type": "string"
+      }
+    },
+    {
+      "name": "createApplication",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ]
+}
